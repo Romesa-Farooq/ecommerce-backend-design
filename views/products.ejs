@@ -1,0 +1,30 @@
+<body>
+
+    <h1>Products Page</h1>
+
+    <div class="product-container">
+
+        <% products.forEach(product => { %>
+
+            <div class="product-card">
+
+                <h2><%= product.name %></h2>
+
+                <p>Price: $<%= product.price %></p>
+
+                <p>Category: <%= product.category %></p>
+
+                <a href="/products/<%= product._id %>">View</a>
+                    View Details
+                </a>
+                <a href="/products?page=1">1</a>
+                <a href="/products?page=2">2</a>
+                <a href="/products?page=3">3</a>
+
+            </div>
+
+        <% }) %>
+
+    </div>
+
+</body>

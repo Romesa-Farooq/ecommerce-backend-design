@@ -1,0 +1,126 @@
+require("dotenv").config();
+const mongoose = require("mongoose");
+console.log("MONGO URI:", process.env.MONGO_URI);
+
+mongoose.connect(process.env.MONGO_URI)
+.then(() => console.log("DB Connected"))
+.catch(err => console.log(err));
+const Product = require("./models/Product");
+const express = require("express");
+const path = require("path");
+
+const app = express();
+const PORT = 3000;
+
+app.set("view engine", "ejs");
+
+app.use(express.static("public"));
+app.get("/", (req, res) => {
+    res.render("home");
+});
+
+app.get("/products", async (req, res) => {
+
+    const page = parseInt(req.query.page) || 1;
+    const limit = 6;
+
+    const products = await Product.find()
+        .skip((page - 1) * limit)
+        .limit(limit);
+
+    res.render("products", { products });
+});
+
+app.get("/products/:id", async (req, res) => {
+    const product = await Product.findById(req.params.id);
+    res.render("productDetails", { product });
+});
+
+app.get("/search", async (req, res) => {
+    const q = req.query.q;
+
+    const products = await Product.find({
+        $or: [
+            { name: { $regex: q, $options: "i" } },
+            { category: { $regex: q, $options: "i" } }
+        ]
+    });
+
+    res.render("products", { products });
+});
+
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+});
+const cookieParser = require("cookie-parser");
+
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+
+const bcrypt = require("bcryptjs");
+const User = require("./models/User");
+
+app.get("/signup", (req, res) => {
+    res.render("signup");
+});
+
+app.post("/signup", async (req, res) => {
+
+    const { name, email, password } = req.body;
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    await User.create({
+        name,
+        email,
+        password: hashedPassword
+    });
+
+    res.redirect("/login");
+});
+
+//login route
+
+app.get("/login", (req, res) => {
+    res.render("login");
+});
+
+const jwt = require("jsonwebtoken");
+app.post("/login", async (req, res) => {
+
+    const { email, password } = req.body;
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+        return res.send("User not found");
+    }
+
+    const match = await bcrypt.compare(password, user.password);
+
+    if (!match) {
+        return res.send("Wrong password");
+    }
+
+    const token = jwt.sign(
+        { id: user._id },
+        "mysecretkey",
+        { expiresIn: "1d" }
+    );
+
+    res.cookie("token", token);
+
+    res.redirect("/products");
+});
+
+const auth = require("./middleware/auth");
+app.get("/add-product", auth, (req, res) => {
+    res.render("addProduct");
+});
+
+app.post("/add-product", auth, async (req, res) => {
+
+    await Product.create(req.body);
+
+    res.redirect("/products");
+});
