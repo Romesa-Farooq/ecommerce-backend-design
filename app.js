@@ -1,25 +1,42 @@
 require("dotenv").config();
-const mongoose = require("mongoose");
-console.log("MONGO URI:", process.env.MONGO_URI);
 
-mongoose.connect(process.env.MONGO_URI)
-.then(() => console.log("DB Connected"))
-.catch(err => console.log(err));
-const Product = require("./models/Product");
 const express = require("express");
+const mongoose = require("mongoose");
 const path = require("path");
+const cookieParser = require("cookie-parser");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+
+const Product = require("./models/Product");
+const User = require("./models/User");
+const auth = require("./middleware/auth");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-app.set("view engine", "ejs");
 
 app.use(express.static("public"));
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+
+app.set("view engine", "ejs");
+
+mongoose.connect(process.env.MONGO_URI)
+.then(() => {
+    console.log("DB Connected");
+
+    app.listen(PORT, () => {
+        console.log(`Server running on port ${PORT}`);
+    });
+})
+.catch(err => {
+    console.error("DB Connection Error:", err);
+});
+
 app.get("/", (req, res) => {
     res.render("home");
 });
 
 app.get("/products", async (req, res) => {
-
     const page = parseInt(req.query.page) || 1;
     const limit = 6;
 
@@ -48,23 +65,11 @@ app.get("/search", async (req, res) => {
     res.render("products", { products });
 });
 
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
-const cookieParser = require("cookie-parser");
-
-app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
-
-const bcrypt = require("bcryptjs");
-const User = require("./models/User");
-
 app.get("/signup", (req, res) => {
     res.render("signup");
 });
 
 app.post("/signup", async (req, res) => {
-
     const { name, email, password } = req.body;
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -78,28 +83,21 @@ app.post("/signup", async (req, res) => {
     res.redirect("/login");
 });
 
-//login route
-
+// LOGIN
 app.get("/login", (req, res) => {
     res.render("login");
 });
 
-const jwt = require("jsonwebtoken");
 app.post("/login", async (req, res) => {
-
     const { email, password } = req.body;
 
     const user = await User.findOne({ email });
 
-    if (!user) {
-        return res.send("User not found");
-    }
+    if (!user) return res.send("User not found");
 
     const match = await bcrypt.compare(password, user.password);
 
-    if (!match) {
-        return res.send("Wrong password");
-    }
+    if (!match) return res.send("Wrong password");
 
     const token = jwt.sign(
         { id: user._id },
@@ -108,18 +106,14 @@ app.post("/login", async (req, res) => {
     );
 
     res.cookie("token", token);
-
     res.redirect("/products");
 });
 
-const auth = require("./middleware/auth");
 app.get("/add-product", auth, (req, res) => {
     res.render("addProduct");
 });
 
 app.post("/add-product", auth, async (req, res) => {
-
     await Product.create(req.body);
-
     res.redirect("/products");
 });

@@ -1,7 +1,8 @@
 const mongoose = require("mongoose");
 const Product = require("./models/Product");
 
-mongoose.connect(process.env.MONGO_URI || "YOUR_MONGO_URI");
+mongoose.connect(process.env.MONGO_URI || 
+    "mongodb+srv://romesafarooq5_db_user:UcbESiSmmRiUmIPj@cluster0.w4bl6cn.mongodb.net/ecommerce");
 
 const products = [
     {
