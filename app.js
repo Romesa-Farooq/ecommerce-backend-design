@@ -40,13 +40,19 @@ app.get("/products", async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = 6;
 
+    const total = await Product.countDocuments();
+    const totalPages = Math.ceil(total / limit);
+
     const products = await Product.find()
         .skip((page - 1) * limit)
         .limit(limit);
 
-    res.render("products", { products });
+    res.render("products", {
+        products,
+        totalPages ,
+        currentPage: page
+    });
 });
-
 app.get("/products/:id", async (req, res) => {
     const product = await Product.findById(req.params.id);
     res.render("productDetails", { product });
@@ -62,7 +68,7 @@ app.get("/search", async (req, res) => {
         ]
     });
 
-    res.render("products", { products });
+    res.render("products", { products, totalPages: 1, currentPage: 1 });
 });
 
 app.get("/signup", (req, res) => {
@@ -116,4 +122,32 @@ app.get("/add-product", auth, (req, res) => {
 app.post("/add-product", auth, async (req, res) => {
     await Product.create(req.body);
     res.redirect("/products");
+});
+
+app.get("/logout", (req, res) => {
+    res.clearCookie("token");
+    res.redirect("/");
+});
+
+app.use((req, res, next) => {
+    const token = req.cookies.token;
+
+    if (!token) {
+        req.user = null;
+        res.locals.user = null;
+        return next();
+    }
+
+    try {
+        const jwt = require("jsonwebtoken");
+        const decoded = jwt.verify(token, "mysecretkey");
+
+        res.locals.user = decoded;  
+        next();
+
+    } catch (err) {
+        req.user = null;
+        res.locals.user = null;
+        next();
+    }
 });

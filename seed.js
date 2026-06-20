@@ -9,7 +9,7 @@ const products = [
         name: "iPhone 14",
         price: 1200,
         category: "Mobile",
-        image: "iphone.jpg",
+        image: "/images/iphone.jpg",
         description: "Apple phone",
         stock: 10
     },
@@ -17,14 +17,17 @@ const products = [
         name: "Samsung TV",
         price: 800,
         category: "Electronics",
-        image: "tv.jpg",
+        image: "/images/tv.jpg",
         description: "Smart TV",
         stock: 5
     }
 ];
 
-Product.insertMany(products)
-.then(() => {
-    console.log("Data inserted");
+async function seed() {
+    await Product.deleteMany({});
+    await Product.insertMany(products);
+    console.log("Database reset + seeded");
     mongoose.connection.close();
-});
+}
+
+seed();

@@ -135,3 +135,44 @@ footer{
         font-size:28px;
     }
 }
+
+.pagination {
+    text-align:center;
+    margin:20px;
+}
+
+.pagination a {
+    margin:0 5px;
+    padding:8px 12px;
+    background:white;
+    border:1px solid #ddd;
+    text-decoration:none;
+    border-radius:5px;
+}
+
+.pagination a:hover {
+    background:#2563eb;
+    color:white;
+}
+
+form {
+    width:300px;
+    margin:50px auto;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+}
+
+input, textarea {
+    padding:10px;
+    border:1px solid #ccc;
+    border-radius:5px;
+}
+
+button {
+    padding:10px;
+    background:#2563eb;
+    color:white;
+    border:none;
+    border-radius:5px;
+}
