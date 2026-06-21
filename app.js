@@ -32,8 +32,16 @@ mongoose.connect(process.env.MONGO_URI)
     console.error("DB Connection Error:", err);
 });
 
-app.get("/", (req, res) => {
-    res.render("home");
+app.get("/", async (req, res) => {
+    try {
+        const featuredProducts = await Product.find().limit(4);
+
+        res.render("home", {
+            featuredProducts
+        });
+    } catch (err) {
+        res.status(500).send("Server Error");
+    }
 });
 
 app.get("/products", async (req, res) => {
@@ -54,8 +62,19 @@ app.get("/products", async (req, res) => {
     });
 });
 app.get("/products/:id", async (req, res) => {
-    const product = await Product.findById(req.params.id);
-    res.render("productDetails", { product });
+    try {
+
+        const product = await Product.findById(req.params.id);
+
+        if (!product) {
+            return res.send("Product not found");
+        }
+
+        res.render("productDetails", { product });
+
+    } catch (err) {
+        res.status(500).send("Server Error");
+    }
 });
 
 app.get("/search", async (req, res) => {

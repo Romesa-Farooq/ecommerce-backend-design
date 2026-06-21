@@ -33,6 +33,34 @@
 
 </section>
 
+<section class="featured">
+
+    <h2>Featured Products</h2>
+
+    <div class="product-container">
+
+        <% featuredProducts.forEach(product => { %>
+
+            <div class="product-card">
+
+                <img src="<%= product.image %>" alt="<%= product.name %>">
+
+                <h3><%= product.name %></h3>
+
+                <p>$<%= product.price %></p>
+
+                <a href="/products/<%= product._id %>">
+                    View Details
+                </a>
+
+            </div>
+
+        <% }) %>
+
+    </div>
+
+</section>
+
 <footer>
     <p>EStore © 2026</p>
 </footer>
